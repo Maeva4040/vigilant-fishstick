@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f4d28">
+<title id="pageTitle">Smart Révision CMR</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+  :root{
+    --vert: #0f4d28;
+    --rouge: #c8102e;
+    --or: #f0a500;
+    --fond: #fdfcf8;
+  }
+  html, body{
+    background:var(--fond);
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    margin:0;
+    padding:0;
+    height:100%;
+    overflow:hidden;
+  }
+
+  .phone{
+    width:100%;
+    height:100vh;
+    height:100dvh;
+    margin:0;
+    background:var(--fond);
+  }
+  .screen{
+    background:var(--fond);
+    overflow:hidden;
+    height:100%;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---- SHARED APP LAYOUT ---- */
+  .app-screen{ display:none; flex-direction:column; height:100%; overflow:hidden; }
+  .app-screen.active{ display:flex; }
+  .screen-content{ flex:1 1 auto; overflow-y:auto; padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 10px; -webkit-overflow-scrolling:touch; }
+
+  /* ---- SPLASH ---- */
+  #screen-splash .screen-content{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:40px 25px;
+  }
+  .brand-line{ font-weight:900; font-size:2.6rem; letter-spacing:1px; line-height:1; }
+  .txt-vert{ color:var(--vert); }
+  .txt-rouge{ color:var(--rouge); }
+  .ribbon{
+    background:var(--vert); color:#fff; font-size:.8rem; font-weight:700;
+    letter-spacing:1px; padding:10px 24px; border-radius:4px; margin-top:16px;
+  }
+  .progress{ height:10px; border-radius:10px; }
+  .progress-bar{ background-color:var(--vert); }
+
+  .card-custom{ border:1px solid #eee; border-radius:16px; box-shadow:0 2px 6px rgba(0,0,0,.04); background:#fff; }
+
+  .profile-pic-container { position: relative; display: inline-block; cursor: pointer; }
+  .profile-img { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; }
+
+  #profileMenu {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0px 5px 20px rgba(0,0,0,0.3);
+      z-index: 1050;
+      width: 280px;
+      text-align: center;
+  }
+  #profileOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1040;
+  }
+
+  .avatar-circle{
+    width:56px; height:56px; border-radius:50%; background:var(--or);
+    display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;
+  }
+  .xp-progress{ height:9px; border-radius:10px; }
+  .xp-progress .progress-bar{ background:linear-gradient(90deg,#f7b733,#f0a500); }
+
+  .stat-box{
+    border:1px solid #eee; border-radius:14px; text-align:center;
+    padding:14px 6px; box-shadow:0 2px 6px rgba(0,0,0,.03); background:#fff;
+  }
+
+  .btn-cta{ background:var(--vert); color:#fff; font-weight:700; border-radius:14px; padding:14px; }
+  .btn-cta:hover{ background:#0c3d20; color:#fff; }
+
+  .bottom-nav{
+    border-top:1px solid #eee;
+    padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 14px);
+    background:var(--fond);
+    flex-shrink:0;
+  }
+  .nav-btn{
+    background:none; border:none; color:#999; font-size:.7rem; font-weight:600;
+    text-align:center; padding:0; flex:1;
+  }
+  .nav-btn.active-nav{ color:var(--vert); }
+  .nav-btn .icon{ font-size:1.3rem; display:block; }
+
+  .page-title{ font-weight:800; font-size:1.15rem; margin:14px 0 12px; color:#111; }
+  .back-btn{ background:none; border:none; font-size:1.2rem; color:#111; padding:0; }
+
+  .pill-toggle{
+    display:flex; background:#eee; border-radius:12px; padding:4px; margin-bottom:16px;
+  }
+  .pill-toggle button{
+    flex:1; border:none; background:none; padding:8px; border-radius:10px;
+    font-weight:700; font-size:.85rem; color:#333;
+  }
+  .pill-toggle button.active-pill{ background:var(--vert); color:#fff; }
+  .pill-toggle.red button.active-pill{ background:var(--rouge); color:#fff; }
+
+  .subject-row{
+    display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #eee;
+    border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer;
+  }
+  .subject-icon{ font-size:1.4rem; }
+  .subject-name{ font-weight:700; font-size:.9rem; margin-bottom:4px; }
+  .subject-progress{ height:6px; border-radius:10px; }
+
+  .quiz-option{
+    display:flex; align-items:center; gap:10px; border:1px solid #ddd; border-radius:12px;
+    padding:12px 14px; margin-bottom:10px; font-weight:600; font-size:.9rem; cursor:pointer; background:#fff;
+  }
+  .quiz-option.correct{ border-color:var(--vert); background:#eafaf0; }
+  .quiz-option.wrong{ border-color:var(--rouge); background:#fde8e8; }
+  .quiz-letter{
+    width:26px; height:26px; border-radius:50%; border:1px solid #999;
+    display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; flex-shrink:0;
+  }
+  .quiz-option.correct .quiz-letter{ background:var(--vert); color:#fff; border-color:var(--vert); }
+  .quiz-option.wrong .quiz-letter{ background:var(--rouge); color:#fff; border-color:var(--rouge); }
+
+  .defi-card{ background:#fff; border:1px solid #eee; border-radius:16px; padding:16px; margin-bottom:14px; }
+  .rank-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f2f2f2; }
+  .rank-medal{ width:26px; text-align:center; font-weight:800; }
+  .rank-avatar{ width:38px; height:38px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; }
+
+  .profile-list-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 4px; border-bottom:1px solid #f2f2f2; font-weight:600; font-size:.9rem; cursor:pointer; background:#fff;
+  }
+
+  .form-control {
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    font-size: .95rem;
+  }
+  .form-control:focus {
+    border-color: var(--vert);
+    box-shadow: 0 0 0 0.2rem rgba(15, 77, 40, 0.15);
+  }
+
+  .password-container { position: relative; }
+  .password-container .form-control { padding-right: 45px; }
+  .toggle-password {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #777; z-index: 10;
+  }
+
+  .lang-switch-container { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+  .lang-btn {
+    border: 1px solid var(--vert); background: transparent; color: var(--vert);
+    font-weight: 700; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .lang-btn.active-lang { background: var(--vert); color: #fff; }
+
+  /* Style Flashcards */
+  .flashcard-container {
+    perspective: 1000px;
+    width: 100%;
+    height: 220px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .flashcard-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #eee;
+  }
+  .flashcard-back {
+    background: #f0f7f4;
+    transform: rotateY(180deg);
+    color: var(--vert);
+  }
+
+  /* ---- LISTE MINI-FICHES & QUIZ ---- */
+  .minifiche-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .minifiche-item:hover {
+    border-color: var(--vert);
+    background: #f8faf9;
+  }
+
+  /* ---- CHAT IA ---- */
+  .chat-window{ display:flex; flex-direction:column; gap:10px; padding-bottom:10px; }
+  .chat-bubble{ max-width:80%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.4; word-break:break-word; }
+  .chat-bubble.bot{ background:#f0f7f4; color:#111; align-self:flex-start; border-bottom-left-radius:4px; }
+  .chat-bubble.user{ background:var(--vert); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+  .chat-input-bar{ display:flex; gap:8px; padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px); border-top:1px solid #eee; background:#fff; flex-shrink:0; }
+  .chat-input-bar input{ flex:1; border:1px solid #ddd; border-radius:20px; padding:10px 16px; font-size:.9rem; }
+  .chat-send-btn{ background:var(--vert); color:#fff; border:none; width:42px; height:42px; border-radius:50%; flex-shrink:0; }
+  .chat-typing{ font-size:.8rem; color:#999; font-style:italic; padding-left:4px; }
+
+  /* ---- BOUTIQUE ---- */
+  .shop-item{ background:#fff; border:1px solid #eee; border-radius:14px; padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+  .shop-icon{ font-size:1.8rem; width:46px; text-align:center; }
+  .shop-buy-btn{ border:none; border-radius:10px; padding:8px 12px; font-weight:700; font-size:.8rem; background:var(--or); color:#fff; }
+  .shop-buy-btn.owned{ background:#ccc; }
+
+  /* ---- PHOTO PROFIL EN GRAND ---- */
+  .photo-view-overlay{
+    display:none;
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.85);
+    z-index:1060;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+  }
+  .photo-view-overlay img{
+    max-width:88%;
+    max-height:70%;
+    border-radius:12px;
+    object-fit:cover;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  }
+  .photo-view-close{
+    position:absolute;
+    top:calc(env(safe-area-inset-top,0px) + 18px);
+    right:20px;
+    background:rgba(255,255,255,0.15);
+    border:none;
+    color:#fff;
+    width:38px; height:38px;
+    border-radius:50%;
+    font-size:1.3rem;
+    line-height:1;
+  }
+
+  .splash-credit{
+    margin-top:10px;
+    font-size:.72rem;
+    color:#999;
+    letter-spacing:.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="screen">
+
+    <!-- ================= SPLASH ================= -->
+    <div class="app-screen active" id="screen-splash">
+      <div class="screen-content">
+        <div class="mb-3">
+          <svg viewBox="0 0 220 200" width="180" height="160">
+            <polygon points="110,0 118,22 141,22 122,35 129,58 110,44 91,58 98,35 79,22 102,22" fill="#f0a500" stroke="#0f4d28" stroke-width="1"/>
+            <path d="M20 150 Q70 110 108 145 L108 100 Q70 70 20 100 Z" fill="#0f4d28"/>
+            <path d="M196 150 Q146 110 108 145 L108 100 Q146 70 196 100 Z" fill="#c8102e"/>
+            <rect x="55" y="88" width="34" height="10" fill="#111"/>
+            <polygon points="35,80 105,80 70,65 3,80" fill="#111"/>
+            <rect x="88" y="95" width="46" height="80" rx="8" fill="#111"/>
+            <rect x="93" y="102" width="36" height="60" rx="2" fill="#c8102e"/>
+          </svg>
+        </div>
+        <div class="brand-line txt-vert">SMART</div>
+        <div class="brand-line txt-rouge">RÉVISION</div>
+        <div class="brand-line txt-vert">CMR</div>
+        <div class="ribbon" data-i18n="splashRibbon">LE SUCCÈS AU BOUT DES DOIGTS</div>
+        <div class="w-100 mt-5">
+          <div class="fw-semibold mb-2" style="color:var(--vert)" data-i18n="loading">Chargement...</div>
+          <div class="progress"><div class="progress-bar" id="progressFill" style="width:0%"></div></div>
+          <div class="fw-bold mt-2" id="progressPct" style="color:var(--vert)">0 %</div>
+          <div class="splash-credit">by MBIAM MARIELLE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= AUTH CHOIX ================= -->
+    <div class="app-screen" id="screen-auth-choix">
+      <div class="screen-content d-flex flex-column justify-content-center text-center px-4">
+        <div class="mb-3">
+          <svg viewBox="0 0 220 200" width="110" height="100">
+            <polygon points="110,0 118,22 141,22 122,35 129,58 110,44 91,58 98,35 79,22 102,22" fill="#f0a500" stroke="#0f4d28" stroke-width="1"/>
+            <path d="M20 150 Q70 110 108 145 L108 100 Q70 70 20 100 Z" fill="#0f4d28"/>
+            <path d="M196 150 Q146 110 108 145 L108 100 Q146 70 196 100 Z" fill="#c8102e"/>
+            <rect x="55" y="88" width="34" height="10" fill="#111"/>
+            <polygon points="35,80 105,80 70,65 3,80" fill="#111"/>
+            <rect x="88" y="95" width="46" height="80" rx="8" fill="#111"/>
+            <rect x="93" y="102" width="36" height="60" rx="2" fill="#c8102e"/>
+          </svg>
+        </div>
+        <h2 class="fw-bold mb-2" style="color:var(--vert);" data-i18n="welcomeTitle">Bienvenue !</h2>
+        <p class="text-secondary small mb-4" data-i18n="welcomeSub">Révise tes cours, progresse et réussis tes examens au Cameroun.</p>
+        <button class="btn btn-cta w-100 mb-3 border-0" onclick="showScreen('auth-connexion')" data-i18n="btnLogin">Se connecter</button>
+        <button class="btn btn-outline-success w-100 fw-bold py-3 mb-4" style="border-radius:14px; border-color:var(--vert); color:var(--vert);" onclick="showScreen('auth-inscription')" data-i18n="btnRegister">Créer un compte</button>
+      </div>
+    </div>
+
+    <!-- ================= CONNEXION ================= -->
+    <div class="app-screen" id="screen-auth-connexion">
+      <div class="screen-content">
+        <button class="back-btn mb-3" onclick="showScreen('auth-choix')">←</button>
+        <div class="page-title mb-1" data-i18n="loginTitle">Connexion</div>
+        <p class="text-secondary small mb-4" data-i18n="loginSub">Bon retour parmi nous ! Connecte-toi pour continuer.</p>
+        <form onsubmit="handleLogin(event)">
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="emailLabel">Email ou Identifiant</label>
+            <input type="email" class="form-control" id="loginEmail" placeholder="ex: maeva@example.com" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label small fw-bold" data-i18n="passwordLabel">Mot de passe</label>
+            <div class="password-container">
+              <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+              <button type="button" class="toggle-password" onclick="togglePasswordVisibility('loginPassword', this)">👁️</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-cta w-100 border-0 mb-3" data-i18n="btnLogin">Se connecter</button>
+        </form>
+        <div class="text-center mt-3">
+          <span class="small text-secondary" data-i18n="noAccount">Pas encore de compte ? </span>
+          <a href="#" class="small fw-bold text-decoration-none" style="color:var(--vert);" onclick="showScreen('auth-inscription')" data-i18n="registerLink">S'inscrire</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= INSCRIPTION ================= -->
+    <div class="app-screen" id="screen-auth-inscription">
+      <div class="screen-content">
+        <button class="back-btn mb-3" onclick="showScreen('auth-choix')">←</button>
+        <div class="page-title mb-1" data-i18n="registerTitle">Créer un compte</div>
+        <p class="text-secondary small mb-3" data-i18n="registerSub">Rejoins Smart Révision et commence tes entraînements.</p>
+        <form onsubmit="handleRegister(event)">
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="nameLabel">Nom complet</label>
+            <input type="text" class="form-control" id="regName" placeholder="ex: Maeva Raynice" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="emailLabel">Email</label>
+            <input type="email" class="form-control" id="regEmail" placeholder="ex: maeva@example.com" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="classLabel">Classe / Série</label>
+            <select class="form-control" id="regClass">
+              <option value="Terminale ESF">Terminale ESF</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="parrainLabel">Code de parrainage (Optionnel)</label>
+            <input type="text" class="form-control" id="regParrain" placeholder="ex: MBIAM2026">
+          </div>
+          <div class="mb-4">
+            <label class="form-label small fw-bold" data-i18n="passwordLabel">Mot de passe</label>
+            <div class="password-container">
+              <input type="password" class="form-control" id="regPassword" placeholder="1 Maj, 1 Min, 4 Chiffres" required>
+              <button type="button" class="toggle-password" onclick="togglePasswordVisibility('regPassword', this)">👁️</button>
+            </div>
+            <div class="form-text text-muted" style="font-size:0.75rem;" data-i18n="pwdHint">Requis : 1 majuscule, 1 minuscule, et 4 chiffres minimum.</div>
+          </div>
+          <button type="submit" class="btn btn-cta w-100 border-0 mb-3" data-i18n="btnRegister">S'inscrire</button>
+        </form>
+        <div class="text-center mt-2 mb-4">
+          <span class="small text-secondary" data-i18n="hasAccount">Déjà un compte ? </span>
+          <a href="#" class="small fw-bold text-decoration-none" style="color:var(--vert);" onclick="showScreen('auth-connexion')" data-i18n="loginLink">Se connecter</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ACCUEIL ================= -->
+    <div class="app-screen" id="screen-accueil">
+      <div class="screen-content">
+        <div class="d-flex justify-content-between align-items-center my-2">
+          <div class="d-flex align-items-center gap-2">
+            <svg viewBox="0 0 60 60" width="38" height="38">
+              <polygon points="30,0 33,8 41,8 34,13 37,21 30,16 23,21 26,13 19,8 27,8" fill="#f0a500"/>
+              <path d="M4 40 Q22 24 30 38 L30 22 Q22 12 4 22 Z" fill="#0f4d28"/>
+              <path d="M56 40 Q38 24 30 38 L30 22 Q38 12 56 22 Z" fill="#c8102e"/>
+              <rect x="26" y="24" width="12" height="20" rx="2" fill="#111"/>
+              <rect x="28" y="27" width="8" height="14" rx="1" fill="#c8102e"/>
+            </svg>
+            <div>
+              <div class="fw-bold" style="color:var(--vert); line-height:1.1; font-size:.95rem;">SMART</div>
+              <div class="fw-bold" style="color:var(--vert); line-height:1.1; font-size:.95rem;">RÉVISION CMR</div>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="profile-pic-container" onclick="openProfileMenu()" title="Changer la photo de profil">
+              <img src="https://via.placeholder.com/150" alt="Profil" class="profile-img" id="globalProfileImg">
+            </div>
+            <div class="position-relative fs-4" style="cursor:pointer;" onclick="openNotificationsModal()">
+              🔔<span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+            </div>
+            <div class="fs-4" style="cursor:pointer;" onclick="openMenuModal()">☰</div>
+          </div>
+        </div>
+
+        <div class="card card-custom p-3 mb-3">
+          <div class="d-flex gap-3 align-items-center">
+            <div class="profile-pic-container" onclick="openProfileMenu()">
+              <img src="https://via.placeholder.com/150" alt="Profil" class="rounded-circle border" style="width:56px; height:56px; object-fit:cover;" id="homeProfileImg">
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-bold" id="userNameDisplay">Bonjour, Maeva ! 👋</div>
+              <div class="text-secondary small mb-2" data-i18n="readyText">Prête à réussir aujourd'hui ?</div>
+              <div class="fw-bold mb-2">Niveau <span id="userLevelDisplay">1</span></div>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress xp-progress flex-grow-1"><div class="progress-bar" id="userXpBar" style="width:0%"></div></div>
+                <span class="small fw-semibold text-nowrap"><span id="userXpDisplay">0</span> / 100 XP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-4"><div class="stat-box"><div class="small fw-semibold mb-2" data-i18n="statLives">Vies</div><div class="fw-bold" id="homeLivesDisplay">❤️❤️ 5/5</div></div></div>
+          <div class="col-4"><div class="stat-box"><div class="small fw-semibold mb-2" data-i18n="statCoins">Pièces</div><div class="fw-bold"><svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px;"><circle cx="12" cy="12" r="10" fill="#f0a500" stroke="#c9870a" stroke-width="1.5"/><circle cx="12" cy="12" r="7" fill="none" stroke="#fff4d6" stroke-width="1"/><text x="12" y="16" font-size="10" font-weight="800" text-anchor="middle" fill="#fff4d6">F</text></svg> <span id="userCoinsDisplay">50</span></div></div></div>
+          <div class="col-4"><div class="stat-box"><div class="small fw-semibold mb-2" data-i18n="statStreak">Série</div><div class="fw-bold">🔥 1 j</div></div></div>
+        </div>
+
+        <!-- Banner Publicité Récompensée -->
+        <div class="card card-custom p-3 mb-3" style="background: linear-gradient(135deg, #fff8e6 0%, #fff 100%); border: 1px dashed var(--or);" id="adRewardBanner">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="fw-bold small" style="color:var(--or);" data-i18n="adBannerTitle">📺 Gagne +1 Vie Gratuite</div>
+              <div class="text-secondary" style="font-size:0.75rem;" data-i18n="adBannerDesc">Regarde une courte vidéo publicitaire pour recharger tes vies !</div>
+            </div>
+            <button class="btn btn-sm btn-warning fw-bold text-white px-3" onclick="watchRewardedAd()" style="background:var(--or); border:none;" data-i18n="adWatchBtn">Regarder</button>
+          </div>
+        </div>
+
+        <div class="card card-custom p-3 mb-3">
+          <div class="fw-bold mb-2" data-i18n="dailyChallengeTitle">Défi du jour</div>
+          <div class="text-secondary small mb-3" data-i18n="dailyChallengeDesc">Réponds à 10 questions de Puériculture</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:9px; border-radius:10px;"><div class="progress-bar bg-success" style="width:0%"></div></div>
+            <span class="small fw-semibold">0/10</span>
+            <span class="small fw-bold px-2 py-1 rounded-pill" style="background:#fdf1cf;">XP 30</span>
+          </div>
+        </div>
+
+        <div class="card card-custom p-3 mb-3" style="cursor:pointer;" onclick="showScreen('chat-ia')">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:1.8rem;">🎓</div>
+            <div class="flex-grow-1">
+              <div class="fw-bold" data-i18n="askTeacherTitle">Poser une question à un prof virtuel</div>
+              <div class="text-secondary small" data-i18n="askTeacherDesc">Un doute sur un cours ? Demande à l'IA !</div>
+            </div>
+            <div class="fs-5 text-secondary">›</div>
+          </div>
+        </div>
+
+        <button class="btn btn-cta w-100 border-0" onclick="openSubjectMinifiches('puericulture')" data-i18n="startReview">Commencer à réviser</button>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn active-nav" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= MATIÈRES ================= -->
+    <div class="app-screen" id="screen-matieres">
+      <div class="screen-content">
+        <button class="back-btn mb-2" onclick="showScreen('accueil')">←</button>
+        <div class="page-title mb-0" data-i18n="navSubjects">Matières</div>
+        <div class="text-secondary small mb-3">Niveau : ESF Terminale / Général</div>
+        <div class="pill-toggle red">
+          <button class="active-pill" id="pillGeneral" onclick="toggleMatiere('general')" data-i18n="tabGeneral">Général</button>
+          <button id="pillPro" onclick="toggleMatiere('pro')" data-i18n="tabPro">Professionnel</button>
+        </div>
+
+        <div id="matieresGeneral">
+          <div class="subject-row" onclick="openSubjectMinifiches('mathematiques')">
+            <div class="subject-icon">🧮</div>
+            <div class="flex-grow-1"><div class="subject-name">Mathématiques</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('francais')">
+            <div class="subject-icon">📘</div>
+            <div class="flex-grow-1"><div class="subject-name">Français</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('physiques')">
+            <div class="subject-icon">⚛️</div>
+            <div class="flex-grow-1"><div class="subject-name">Physiques - Chimie</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('anglais')">
+            <div class="subject-icon">🇬🇧</div>
+            <div class="flex-grow-1"><div class="subject-name">Anglais (English)</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('biologie')">
+            <div class="subject-icon">🧬</div>
+            <div class="flex-grow-1"><div class="subject-name">Biologie</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('ecm')">
+            <div class="subject-icon">🏛️</div>
+            <div class="flex-grow-1"><div class="subject-name">ECM</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('histoire')">
+            <div class="subject-icon">📜</div>
+            <div class="flex-grow-1"><div class="subject-name">Histoire</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('geographie')">
+            <div class="subject-icon">🌍</div>
+            <div class="flex-grow-1"><div class="subject-name">Géographie</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('philosophie')">
+            <div class="subject-icon">🧠</div>
+            <div class="flex-grow-1"><div class="subject-name">Philosophie</div><div class="progress subject-progress"><div class="progress-bar" style="width:5%"></div></div></div>
+          </div>
+        </div>
+
+        <div id="matieresPro" style="display:none;">
+          <div class="subject-row" onclick="openSubjectMinifiches('economieentreprise')">
+            <div class="subject-icon">📊</div>
+            <div class="flex-grow-1"><div class="subject-name">Économie d'entreprise</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('viesociale')">
+            <div class="subject-icon">👥</div>
+            <div class="flex-grow-1"><div class="subject-name">Vie sociale et professionnelle</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('puericulture')">
+            <div class="subject-icon">👶</div>
+            <div class="flex-grow-1"><div class="subject-name">Puériculture</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('gerontologie')">
+            <div class="subject-icon">👵</div>
+            <div class="flex-grow-1"><div class="subject-name">Gérontologie</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('dietetique')">
+            <div class="subject-icon">🍽️</div>
+            <div class="flex-grow-1"><div class="subject-name">Diététique Nutrition</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('techniqueculinaire')">
+            <div class="subject-icon">🍳</div>
+            <div class="flex-grow-1"><div class="subject-name">Technique Culinaire</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('educationartistique')">
+            <div class="subject-icon">🎨</div>
+            <div class="flex-grow-1"><div class="subject-name">Éducation Artistique et Décorative</div><div class="progress subject-progress"><div class="progress-bar" style="width:5%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('sciencesequipements')">
+            <div class="subject-icon">⚡</div>
+            <div class="flex-grow-1"><div class="subject-name">Sciences des Équipements et du Logement</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+          <div class="subject-row" onclick="openSubjectMinifiches('amenagementhygiene')">
+            <div class="subject-icon">🧹</div>
+            <div class="flex-grow-1"><div class="subject-name">Aménagement et Hygiène du Milieu de Vie</div><div class="progress subject-progress"><div class="progress-bar" style="width:10%"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= LISTE DES 10 MINI-FICHES D'UNE MATIÈRE ================= -->
+    <div class="app-screen" id="screen-liste-minifiches">
+      <div class="screen-content">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <button class="back-btn" onclick="showScreen('matieres')">←</button>
+        </div>
+        <div class="fw-bold mb-1" id="listFichesSubjectTitle" style="font-size:1.1rem; color:var(--vert);">Matière</div>
+        <div class="text-secondary mb-3" style="font-size:.85rem;">Choisis une mini-fiche de révision (1 à 10)</div>
+        
+        <div id="minifichesContainer"></div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= LEÇON / MINI-FICHE UNIQUE ================= -->
+    <div class="app-screen" id="screen-lecon">
+      <div class="screen-content">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <button class="back-btn" onclick="backToListMinifiches()">← </button>
+          <button class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" onclick="speakLesson()">🔊 <span data-i18n="audioListen">Écouter la fiche</span></button>
+        </div>
+        <div class="fw-bold mb-1" id="leconTitle" style="font-size:1.1rem; color:var(--vert);">—</div>
+        <div class="text-secondary mb-3" style="font-size:.85rem;" id="leconSubtitle">—</div>
+        
+        <div class="card card-custom p-3 mb-4 bg-white" id="leconContent" style="line-height:1.6; font-size:.95rem;"></div>
+        
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill py-3 fw-bold" style="border-radius:12px;" onclick="backToListMinifiches()" data-i18n="backToFiches">Retour fiches</button>
+          <button class="btn btn-cta flex-fill border-0 py-3" onclick="startFicheQuiz()" data-i18n="startQuizBtn">Quiz de la fiche 🚀</button>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= QUIZ DE LA MINI-FICHE ================= -->
+    <div class="app-screen" id="screen-quiz">
+      <div class="screen-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <button class="back-btn" onclick="showScreen('lecon')">←</button>
+          <div class="fw-bold" id="quizLives">❤️❤️❤️❤️❤️ 5/5</div>
+        </div>
+        <div class="small text-secondary mb-3"><span data-i18n="scoreLabel">Score</span> : <span id="quizScore">0</span> XP</div>
+        <div class="small text-secondary mb-2" id="quizProgress">Question 1/3</div>
+
+        <div class="fw-bold mb-3" id="quizQuestion" style="font-size:1.05rem;">Chargement...</div>
+        <div id="quizOptions"></div>
+
+        <div class="text-end mb-2" id="quizHintBtnWrap" style="display:block;">
+          <button class="btn btn-sm btn-outline-warning fw-bold rounded-pill" onclick="useHint()" id="quizHintBtn">💡 <span data-i18n="useHint">Indice</span> (<span id="hintCount">2</span>)</button>
+        </div>
+        
+        <div id="quizExplanationBox" class="p-3 mb-3 rounded-3" style="display:none; background:#f0f7f4; border-left:4px solid var(--vert);">
+          <div class="fw-bold small mb-1" style="color:var(--vert);">💡 Explication détaillée :</div>
+          <div class="small text-secondary" id="quizExplanationText"></div>
+        </div>
+
+        <div class="fw-bold my-3" id="quizFeedback" style="min-height:24px;"></div>
+        <button class="btn btn-cta w-100 border-0 mt-2" id="quizNextBtn" style="display:none;" onclick="nextQuestion()" data-i18n="nextQuestion">Question suivante</button>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= FLASHCARDS / CARTES MÉMOIRE ================= -->
+    <div class="app-screen" id="screen-flashcards">
+      <div class="screen-content">
+        <button class="back-btn mb-2" onclick="showScreen('defis')">←</button>
+        <div class="page-title mb-1" data-i18n="flashcardsTitle">🧠 Cartes Mémoire (Flashcards)</div>
+        <p class="text-secondary small mb-4" data-i18n="flashcardsSub">Tape sur la carte pour voir la réponse au dos.</p>
+
+        <div class="flashcard-container" onclick="flipCard()">
+          <div class="flashcard" id="flashcardObj">
+            <div class="flashcard-face">
+              <span class="badge bg-secondary mb-2" id="fcSubject">Puériculture</span>
+              <h5 class="fw-bold" id="fcFrontText" style="color:var(--vert);">Question / Notion</h5>
+              <small class="text-muted mt-3" data-i18n="tapToFlip">👉 Appuyer pour retourner</small>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <span class="badge bg-success mb-2">Réponse / Définition</span>
+              <h5 class="fw-bold" id="fcBackText">Explication...</h5>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-outline-danger flex-fill py-2 fw-bold" onclick="nextFlashcard(-1)" data-i18n="fcHard">Difficile ❌</button>
+          <button class="btn btn-outline-success flex-fill py-2 fw-bold" onclick="nextFlashcard(1)" data-i18n="fcEasy">Maîtrisé ✅</button>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= SIMULATEUR D'EXAMEN / MOYENNE ================= -->
+    <div class="app-screen" id="screen-simulateur">
+      <div class="screen-content">
+        <button class="back-btn mb-2" onclick="showScreen('profil')">←</button>
+        <div class="page-title mb-1" data-i18n="simTitle">📊 Simulateur de Moyenne Probatoire / Bac</div>
+        <p class="text-secondary small mb-3" data-i18n="simSub">Estime tes notes pour vérifier si tu obtiens ton examen.</p>
+
+        <div class="card card-custom p-3 mb-3">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Puériculture (Coeff 4)</label>
+            <input type="number" class="form-control" id="notePuer" placeholder="ex: 14" min="0" max="20" step="0.5">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Technique Culinaire (Coeff 4)</label>
+            <input type="number" class="form-control" id="noteCul" placeholder="ex: 12" min="0" max="20" step="0.5">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Français (Coeff 3)</label>
+            <input type="number" class="form-control" id="noteFr" placeholder="ex: 11" min="0" max="20" step="0.5">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Mathématiques (Coeff 2)</label>
+            <input type="number" class="form-control" id="noteMath" placeholder="ex: 10" min="0" max="20" step="0.5">
+          </div>
+          <button class="btn btn-cta w-100 border-0" onclick="calculerMoyenne()" data-i18n="calcBtn">Calculer ma moyenne</button>
+        </div>
+
+        <div class="card card-custom p-3 text-center bg-white mb-4" id="resultatSimContainer" style="display:none;">
+          <h5 class="fw-bold mb-1" id="moyenneFinaleTxt" style="color:var(--vert);">Moyenne : 0.00 / 20</h5>
+          <p class="small fw-semibold mb-0" id="mentionTxt">Résultat</p>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= DÉFIS & EXERCICES ================= -->
+    <div class="app-screen" id="screen-defis">
+      <div class="screen-content">
+        <div class="page-title" data-i18n="navChallenges">Défis & Entraînements</div>
+        
+        <div class="defi-card" onclick="openFlashcards()" style="cursor:pointer; background: linear-gradient(135deg, #fdfcf8 0%, #eafaf0 100%);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:2.2rem;">🧠</div>
+            <div>
+              <div class="fw-bold mb-1" data-i18n="flashcardsCardTitle">Mode Flashcards (Cartes Mémoire)</div>
+              <div class="text-secondary small" data-i18n="flashcardsCardDesc">Mémorise rapidement les définitions clés.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="defi-card" onclick="showScreen('boutique')" style="cursor:pointer; background: linear-gradient(135deg, #fdfcf8 0%, #fff8e6 100%);">
+          <div class="d-flex align-items-center gap-3">
+            <div style="font-size:2.2rem;">🛍️</div>
+            <div>
+              <div class="fw-bold mb-1" data-i18n="shopCardTitle">Boutique de Pièces</div>
+              <div class="text-secondary small" data-i18n="shopCardDesc">Dépense tes pièces contre des avatars, thèmes et indices.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="defi-card">
+          <div class="fw-bold mb-1" data-i18n="dailyChallengeTitle">🔥 Défi quotidien</div>
+          <div class="text-secondary small mb-3">Réponds à 15 questions dans n'importe quelle matière</div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="small fw-semibold">0/15</span>
+            <div class="progress flex-grow-1" style="height:8px; border-radius:10px;"><div class="progress-bar bg-warning" style="width:0%"></div></div>
+            <span class="small fw-bold">XP 50</span>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= CLASSEMENT ================= -->
+    <div class="app-screen" id="screen-classement">
+      <div class="screen-content">
+        <div class="page-title" data-i18n="navLeaderboard">Classement</div>
+        <div class="pill-toggle mb-3">
+          <button class="active-pill" id="pillHebdo" onclick="toggleClassement('hebdo')" data-i18n="tabWeekly">Hebdomadaire</button>
+          <button id="pillGlobal" onclick="toggleClassement('global')" data-i18n="tabGlobal">Global</button>
+        </div>
+
+        <div class="d-flex align-items-center mb-4 p-3 bg-white border rounded shadow-sm">
+            <img src="https://via.placeholder.com/150" alt="Profil" class="profile-img me-3" style="width: 50px; height: 50px;" id="rankingProfileImg">
+            <div>
+                <h5 class="mb-0 fw-bold" id="rankingUserName">Maeva Raynice</h5>
+                <small class="text-muted" data-i18n="currentRank">Classement actuel : 1er</small>
+            </div>
+        </div>
+
+        <div class="rank-row active bg-light border rounded px-2"><div class="rank-medal">1</div><div class="rank-avatar"><img src="https://via.placeholder.com/150" id="listProfileImg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div><div class="flex-grow-1 fw-semibold"><span id="listUserName">Maeva Raynice</span> (<span data-i18n="you">Vous</span>)</div><div class="fw-bold"><span id="listUserPts">0</span> pts</div></div>
+        <div class="rank-row"><div class="rank-medal">2</div><div class="rank-avatar">🙂</div><div class="flex-grow-1 fw-semibold">Marie A.</div><div class="fw-bold">120 pts</div></div>
+        <div class="rank-row"><div class="rank-medal">3</div><div class="rank-avatar">🙂</div><div class="flex-grow-1 fw-semibold">Jean B.</div><div class="fw-bold">90 pts</div></div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= PROFIL ================= -->
+    <div class="app-screen" id="screen-profil">
+      <div class="screen-content">
+        <div class="page-title" data-i18n="navProfile">Profil</div>
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="profile-pic-container" onclick="openProfileMenu()" title="Changer la photo">
+            <img src="https://via.placeholder.com/150" alt="Profil" class="rounded-circle border" style="width:64px; height:64px; object-fit:cover;" id="profileScreenImg">
+          </div>
+          <div>
+            <div class="fw-bold" id="profileNameDisplay">Maeva Raynice</div>
+            <div class="text-secondary small">Niveau <span id="profileLevelDisplay">1</span></div>
+            <div class="text-secondary small"><span id="profileXpDisplay">0</span> / 100 XP</div>
+          </div>
+        </div>
+        <div class="progress xp-progress mb-3"><div class="progress-bar" id="profileXpBar" style="width:0%"></div></div>
+
+        <!-- Section Parrainage dans le profil -->
+        <div class="card card-custom p-3 mb-3 bg-light">
+          <div class="fw-bold small mb-1" style="color:var(--vert);" data-i18n="referralTitle">🎁 Système de Parrainage</div>
+          <p class="text-secondary small mb-2" data-i18n="referralDesc">Partage ton code. Si ton filleul s'inscrit avec, tu reçois +2 vies bonus !</p>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control bg-white fw-bold text-center" id="myReferralCode" value="MBIAM2026" readonly>
+            <button class="btn btn-outline-success" type="button" onclick="copyReferralCode()" data-i18n="copyCode">Copier</button>
+          </div>
+        </div>
+
+        <div class="profile-list-item" onclick="openBadgesModal()"><span data-i18n="myBadges">⭐ Mes badges</span><span>1 ›</span></div>
+        <div class="profile-list-item" onclick="openParentModal()"><span data-i18n="parentSpaceMenu">👨‍👩‍👧 Espace Suivi Parents</span><span>›</span></div>
+        <div class="profile-list-item" onclick="openFaqModal()"><span data-i18n="faqMenu">❓ Foire Aux Questions (FAQ)</span><span>›</span></div>
+        <div class="profile-list-item" onclick="showScreen('simulateur')"><span data-i18n="simTitleMenu">🧮 Simulateur de Moyenne</span><span>›</span></div>
+        <div class="profile-list-item" onclick="showScreen('boutique')"><span data-i18n="shopMenu">🛍️ Boutique de Pièces</span><span>›</span></div>
+        <div class="profile-list-item" onclick="showScreen('chat-ia')"><span data-i18n="askTeacherMenu">🎓 Prof virtuel (Chat IA)</span><span>›</span></div>
+        <div class="profile-list-item" onclick="accessAnnales()" style="color:var(--vert);"><span data-i18n="examAnnales">📚 Annales des Examens</span><span id="annalesStatus">🔒 ›</span></div>
+        <div class="profile-list-item" onclick="openPremiumModal()" style="color:var(--or);"><span data-i18n="goPremium">💎 Passer à Premium</span><span id="premiumBadgeStatus">✨ ›</span></div>
+        <div class="profile-list-item" onclick="handleLogout()" style="color:var(--rouge);"><span data-i18n="logout">🚪 Se déconnecter</span><span>›</span></div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= CHAT IA / PROF VIRTUEL INTELLIGENT ================= -->
+    <div class="app-screen" id="screen-chat-ia">
+      <div class="screen-content" style="padding-bottom:0;" id="chatScrollArea">
+        <button class="back-btn mb-2" onclick="showScreen('accueil')">←</button>
+        <div class="page-title mb-1" data-i18n="chatTitle">🎓 Prof Virtuel Intelligent</div>
+        <p class="text-secondary small mb-3" data-i18n="chatSub">Pose ta question dans n'importe quelle matière (Physiques, Chimie, Anglais, Biologie, Économie d'entreprise, Vie sociale, Puériculture, Mathématiques, etc.) !</p>
+        <div class="chat-window" id="chatWindow">
+          <div class="chat-bubble bot">Bonjour ! Je suis ton prof virtuel intelligent. Je peux répondre à toutes tes questions sur l'enseignement général (Maths, Français, Physiques-Chimie, Anglais, Biologie, Histoire, Géo...) et professionnel (Économie d'entreprise, Vie sociale et professionnelle, Puériculture, Diététique...). Que veux-tu savoir aujourd'hui ? 📚✨</div>
+        </div>
+        <div class="chat-typing" id="chatTyping" style="display:none;" data-i18n="chatTyping">Le prof virtuel réfléchit...</div>
+      </div>
+      <div class="chat-input-bar">
+        <input type="text" id="chatInput" placeholder="Pose ta question sur n'importe quel cours..." onkeydown="if(event.key==='Enter')sendSmartChatMessage()">
+        <button class="chat-send-btn" onclick="sendSmartChatMessage()">➤</button>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+    <!-- ================= BOUTIQUE DE PIÈCES ================= -->
+    <div class="app-screen" id="screen-boutique">
+      <div class="screen-content">
+        <button class="back-btn mb-2" onclick="showScreen('defis')">←</button>
+        <div class="page-title mb-1" data-i18n="shopTitle">🛍️ Boutique de Pièces</div>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <p class="text-secondary small mb-0" data-i18n="shopSub">Utilise tes pièces gagnées en quiz.</p>
+          <span class="fw-bold px-3 py-1 rounded-pill" style="background:#fdf1cf;">
+            <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-2px;"><circle cx="12" cy="12" r="10" fill="#f0a500" stroke="#c9870a" stroke-width="1.5"/><circle cx="12" cy="12" r="7" fill="none" stroke="#fff4d6" stroke-width="1"/><text x="12" y="16" font-size="10" font-weight="800" text-anchor="middle" fill="#fff4d6">F</text></svg>
+            <span id="shopCoinsDisplay">50</span>
+          </span>
+        </div>
+
+        <div class="fw-bold small text-secondary mb-2" data-i18n="shopAvatars">AVATARS</div>
+        <div id="shopAvatarsList"></div>
+
+        <div class="fw-bold small text-secondary mb-2 mt-3" data-i18n="shopThemes">THÈMES DE COULEUR</div>
+        <div id="shopThemesList"></div>
+
+        <div class="fw-bold small text-secondary mb-2 mt-3" data-i18n="shopHints">INDICES QUIZ</div>
+        <div id="shopHintsList"></div>
+      </div>
+      <div class="d-flex justify-content-around bottom-nav">
+        <button class="nav-btn" onclick="showScreen('accueil')"><span class="icon">🏠</span><span data-i18n="navHome">Accueil</span></button>
+        <button class="nav-btn" onclick="showScreen('matieres')"><span class="icon">📖</span><span data-i18n="navSubjects">Matières</span></button>
+        <button class="nav-btn active-nav" onclick="showScreen('defis')"><span class="icon">🏆</span><span data-i18n="navChallenges">Défis</span></button>
+        <button class="nav-btn" onclick="showScreen('classement')"><span class="icon">📊</span><span data-i18n="navLeaderboard">Classement</span></button>
+        <button class="nav-btn" onclick="showScreen('profil')"><span class="icon">👤</span><span data-i18n="navProfile">Profil</span></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= MODALES ================= -->
+
+<div id="profileOverlay" onclick="closeProfileMenu()"></div>
+<div id="profileMenu">
+    <h5 class="mb-3 fw-bold" style="color:var(--vert)" data-i18n="profileOptions">Option du Profil</h5>
+    <button class="btn btn-outline-primary w-100 mb-2" onclick="viewProfilePhoto()"><i class="bi bi-eye"></i> <span data-i18n="viewPhoto">Voir la photo de profil</span></button>
+    <button class="btn btn-success w-100 mb-2" onclick="triggerGalleryImport()" style="background:var(--vert); border:none;"><i class="bi bi-image"></i> <span data-i18n="importGallery">Importer depuis la galerie</span></button>
+    <button class="btn btn-light w-100 text-muted" onclick="closeProfileMenu()" data-i18n="close">Fermer</button>
+</div>
+<input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+
+<div class="photo-view-overlay" id="photoViewOverlay" onclick="closePhotoView(event)">
+  <button class="photo-view-close" onclick="closePhotoView(event)">✕</button>
+  <img src="https://via.placeholder.com/150" id="photoViewImg" alt="Photo de profil">
+</div>
+
+<!-- Modale Suivi Parents -->
+<div class="modal fade" id="parentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" style="color:var(--vert);" data-i18n="parentModalTitle">👨‍👩‍👧 Espace Suivi pour les Parents</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-3" data-i18n="parentModalDesc">Résumé de l'activité de l'élève pour le suivi parental :</p>
+        <div class="card p-3 bg-light border-0 mb-3">
+          <div class="d-flex justify-content-between mb-2"><span class="fw-bold" data-i18n="parentStatFiches">Fiches consultées :</span> <span id="parentFichesCount">12 / 90</span></div>
+          <div class="d-flex justify-content-between mb-2"><span class="fw-bold" data-i18n="parentStatQuiz">Quiz réussis :</span> <span id="parentQuizCount">8</span></div>
+          <div class="d-flex justify-content-between mb-2"><span class="fw-bold" data-i18n="parentStatTime">Temps de révision :</span> <span>2h 45m</span></div>
+          <div class="d-flex justify-content-between"><span class="fw-bold" data-i18n="parentStatStatus">Statut Compte :</span> <span class="badge bg-success" id="parentAccountStatusBadge">Standard</span></div>
+        </div>
+        <button class="btn btn-outline-success w-100 fw-bold" onclick="alert('Rapport envoyé par email aux parents.')" data-i18n="sendParentReport">📧 Recevoir le rapport complet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale FAQ -->
+<div class="modal fade" id="faqModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" style="color:var(--vert);" data-i18n="faqModalTitle">❓ Foire Aux Questions (FAQ)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="accordion" id="faqAccordion">
+          <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold small collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" data-i18n="faqQ1">Comment fonctionnent les vies ?</button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body small text-secondary" data-i18n="faqA1">Tu as 5 vies au total. Chaque erreur en quiz retire 1 vie. Tu peux recharger tes vies en regardant une publicité récompensée ou en attendant la régénération automatique. Les utilisateurs Premium ont des vies illimitées !</div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold small collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" data-i18n="faqQ2">Comment passer au mode Premium ?</button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body small text-secondary" data-i18n="faqA2">Le mode Premium coûte 2 500 FCFA payables via Orange Money ou MTN Mobile Money. Il t'offre des vies illimitées, zéro publicité, et l'accès complet aux annales d'examens.</div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold small collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" data-i18n="faqQ3">L'application fonctionne-t-elle hors ligne ?</button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body small text-secondary" data-i18n="faqA3">Oui ! Smart Révision CMR intègre une structure hors ligne (Service Worker / Cache local) pour que tu puisses réviser tes cours et fiches même sans connexion Internet.</div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold small collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" data-i18n="faqQ4">Comment fonctionne le parrainage ?</button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body small text-secondary" data-i18n="faqA4">Partage ton code de parrainage à un camarade. S'il l'entre lors de son inscription et installe l'application, tu reçois automatiquement 2 vies bonus dans ton inventaire !</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="badgesModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" data-i18n="myBadgesModal">⭐ Mes Badges (1)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 text-center">
+          <div class="col-4"><div class="p-3 border rounded-3 bg-light"><div style="font-size:2rem;">🚀</div><div class="small fw-bold mt-1">Débutant</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="annalesModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold text-success"><i class="bi bi-journal-check"></i> <span data-i18n="examAnnales">Annales des Examens</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small" data-i18n="annalesDesc">Accédez aux sujets corrigés et aux épreuves des sessions précédentes (Terminale ESF).</p>
+        <div class="list-group mb-3">
+            <a href="#" class="list-group-item list-group-item-action">Session 2025 - Philosophie ESF</a>
+            <a href="#" class="list-group-item list-group-item-action">Session 2024 - Économie Sociale et Familiale</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="annalesLockedModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold text-danger"><i class="bi bi-lock-fill"></i> <span data-i18n="lockedTitle">Accès restreint</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div style="font-size: 3rem;" class="mb-2">🔒</div>
+        <p class="text-secondary small mb-4" data-i18n="lockedMsg">Les annales des examens sont bloquées. Tu dois effectuer le paiement Premium pour y accéder !</p>
+        <button class="btn btn-cta w-100 border-0" onclick="closeLockedAndOpenPremium()" data-i18n="unlockNow">Débloquer avec Premium (2 500 FCFA)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="premiumModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" style="color:var(--vert);" data-i18n="premiumTitle">💎 Smart Révision Premium</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small" data-i18n="premiumDesc">Accède à tous les quiz illimités, vies illimitées et zéro publicité !</p>
+        <form onsubmit="handlePremiumPayment(event)">
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="operator">Opérateur</label>
+            <select class="form-control" id="operatorSelect">
+              <option value="Orange Money">Orange Money Cameroun</option>
+              <option value="MTN Momo">MTN Mobile Money Cameroun</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold" data-i18n="phoneLabel">Numéro de téléphone</label>
+            <input type="tel" class="form-control" id="momoNumber" placeholder="659276790" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label small fw-bold" data-i18n="pinLabel">Code PIN de confirmation</label>
+            <div class="password-container">
+              <input type="password" class="form-control" id="premiumPassword" placeholder="••••" required>
+              <button type="button" class="toggle-password" onclick="togglePasswordVisibility('premiumPassword', this)">👁️</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-cta w-100 border-0" data-i18n="payBtn">Valider le paiement (2 500 FCFA)</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="notificationsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" style="color:var(--vert);" data-i18n="notifTitle">🔔 Notifications</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="list-group list-group-flush">
+          <div class="list-group-item px-0 py-2 border-bottom">
+            <div class="fw-bold small" data-i18n="notif1Title">🔥 Rappel de série</div>
+            <p class="text-secondary small mb-0" data-i18n="notif1Desc">N'oublie pas ton défi du jour pour garder ta série !</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="menuModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold" style="color:var(--vert);">☰ Menu Rapide</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="list-group list-group-flush mb-2">
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" onclick="menuNavigate('accueil')">🏠 <span data-i18n="navHome">Accueil</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" onclick="menuNavigate('matieres')">📖 <span data-i18n="navSubjects">Matières ESF & Général</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" onclick="menuNavigate('defis')">🏆 <span data-i18n="navChallenges">Défis & Flashcards</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" onclick="menuNavigate('classement')">📊 <span data-i18n="navLeaderboard">Classement</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" onclick="menuNavigate('profil')">👤 <span data-i18n="navProfile">Mon Profil</span></button>
+        </div>
+
+        <div class="rounded-3 p-2 mb-2" style="background:#f0f7f4; border:1px solid #d7ecdf;">
+          <div class="small fw-bold px-2 mb-1" style="color:var(--vert);" data-i18n="newFeatures">✨ NOUVEAU</div>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" style="background:transparent;" onclick="menuNavigate('chat-ia')">🎓 <span data-i18n="askTeacherMenu">Prof virtuel intelligent</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2" style="background:transparent;" onclick="menuNavigate('boutique')">🛍️ <span data-i18n="shopMenu">Boutique de Pièces</span></button>
+        </div>
+
+        <div class="list-group list-group-flush mb-3">
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2 text-success" onclick="closeMenuAndAccessAnnales()">📚 <span data-i18n="examAnnales">Annales des Examens</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2 text-warning" onclick="closeMenuAndOpenModal('premiumModal')">💎 <span data-i18n="goPremium">Devenir Premium</span></button>
+          <button class="list-group-item list-group-item-action border-0 fw-semibold py-2 text-danger" onclick="menuLogout()">🚪 <span data-i18n="logout">Se déconnecter</span></button>
+        </div>
+
+        <div class="text-center border-top pt-3">
+          <div class="small fw-bold text-secondary mb-2" data-i18n="selectLanguage">Langue / Language</div>
+          <div class="lang-switch-container">
+            <button class="lang-btn active-lang" id="langBtnFr" onclick="setLanguage('fr')">FR (Français)</button>
+            <button class="lang-btn" id="langBtnEn" onclick="setLanguage('en')">EN (English)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Banque de questions pour les mini-fiches
+  const fichesData = {
+    puericulture: [
+      {
+        title: "Fiche 1 : Le développement du nourrisson",
+        content: "Le développement psychomoteur du nourrisson suit une loi céphalo-caudale (de la tête vers les pieds) et proximo-distale (du centre vers les extrémités). À 3 mois, l'enfant tient sa tête. À 6 mois, il tient assis avec appui.",
+        quiz: [
+          { q: "Selon quelle loi s'effectue le développement psychomoteur ?", options: ["De la tête vers les pieds (céphalo-caudale)", "Des pieds vers la tête", "De l'extérieur vers l'intérieur", "Aléatoire"], correct: 0, explanation: "Le développement progresse de la tête vers les pieds." },
+          { q: "À quel âge un nourrisson tient-il généralement sa tête ?", options: ["1 mois", "3 mois", "6 mois", "9 mois"], correct: 1, explanation: "Vers 3 mois, les muscles du cou sont suffisamment toniques." },
+          { q: "Qu'est-ce que la loi proximo-distale ?", options: ["Développement du centre du corps vers les extrémités", "Développement uniquement des jambes", "Croissance des dents", "Vision nocturne"], correct: 0, explanation: "Le contrôle s'établit du tronc vers les mains/doigts." }
+        ]
+      },
+      {
+        title: "Fiche 2 : L'alimentation de l'enfant de 0 à 1 an",
+        content: "L'allaitement maternel exclusif est recommandé jusqu'à 6 mois. La diversification alimentaire commence entre 4 et 6 mois avec l'introduction progressive des fruits et légumes mixés sans sel ni sucre.",
+        quiz: [
+          { q: "Jusqu'à quel âge recommande-t-on l'allaitement exclusif ?", options: ["3 mois", "6 mois", "1 an", "2 ans"], correct: 1, explanation: "L'OMS recommande 6 mois d'allaitement maternel exclusif." },
+          { q: "À quel moment débute la diversification alimentaire ?", options: ["Dès la naissance", "Entre 4 et 6 mois", "À 10 mois", "À 15 mois"], correct: 1, explanation: "C'est la période où le système digestif commence à tolérer d'autres aliments." },
+          { q: "Que faut-il éviter d'ajouter dans les purées de bébé au début ?", options: ["Du sel et du sucre", "De l'eau", "De l'huile végétale", "Des légumes"], correct: 0, explanation: "Les reins de bébé sont immatures, il ne faut pas surcharger en sel." }
+        ]
+      }
+    ]
+  };
+
+  let currentSubject = 'puericulture';
+  let currentFicheIndex = 0;
+  let currentQuestionIndex = 0;
+  let quizScoreXP = 0;
+  let currentQuizList = [];
+  let userLives = 5;
+  let userCoins = 50;
+  let userXp = 0;
+  let userLevel = 1;
+
+  function showScreen(screenId) {
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screenId).classList.add('active');
+  }
+
+  // Simulation Splash screen au démarrage avec vérification de session
+  window.addEventListener('DOMContentLoaded', () => {
+    let p = 0;
+    const interval = setInterval(() => {
+      p += 15;
+      document.getElementById('progressFill').style.width = p + '%';
+      document.getElementById('progressPct').textContent = p + ' %';
+      if(p >= 100) {
+        clearInterval(interval);
+        checkExistingSession();
+      }
+    }, 120);
+    renderShop();
+    updateLivesDisplay();
+  });
+
+  // Vérifier si l'utilisateur est déjà connecté dans le localStorage
+  function checkExistingSession() {
+    const savedUser = localStorage.getItem('smart_revision_user');
+    const savedPhoto = localStorage.getItem('smart_revision_photo');
+
+    if(savedUser) {
+      const userData = JSON.parse(savedUser);
+      updateUserInterfaceData(userData.name);
+      if(savedPhoto) {
+        applyProfilePhotoToAllImgs(savedPhoto);
+      }
+      showScreen('accueil');
+    } else {
+      showScreen('auth-choix');
+    }
+  }
+
+  function updateUserInterfaceData(name) {
+    document.getElementById('userNameDisplay').textContent = "Bonjour, " + name + " ! 👋";
+    document.getElementById('profileNameDisplay').textContent = name;
+    document.getElementById('rankingUserName').textContent = name;
+    document.getElementById('listUserName').textContent = name;
+  }
+
+  // Rendu minimal de la boutique pour éviter les erreurs de référence
+  function renderShop() {
+    const avatarsList = document.getElementById('shopAvatarsList');
+    const themesList = document.getElementById('shopThemesList');
+    const hintsList = document.getElementById('shopHintsList');
+
+    if(avatarsList) {
+      avatarsList.innerHTML = `<div class="shop-item"><div class="shop-icon">🦊</div><div class="flex-grow-1"><div class="fw-bold">Avatar Renard</div><div class="text-secondary small">100 Pièces</div></div><button class="shop-buy-btn" onclick="buyShopItem(100)">Acheter</button></div>`;
+    }
+    if(themesList) {
+      themesList.innerHTML = `<div class="shop-item"><div class="shop-icon">🎨</div><div class="flex-grow-1"><div class="fw-bold">Thème Or & Vert</div><div class="text-secondary small">150 Pièces</div></div><button class="shop-buy-btn" onclick="buyShopItem(150)">Acheter</button></div>`;
+    }
+    if(hintsList) {
+      hintsList.innerHTML = `<div class="shop-item"><div class="shop-icon">💡</div><div class="flex-grow-1"><div class="fw-bold">+5 Indices Quiz</div><div class="text-secondary small">50 Pièces</div></div><button class="shop-buy-btn" onclick="buyShopItem(50)">Acheter</button></div>`;
+    }
+  }
+
+  function buyShopItem(cost) {
+    if(userCoins >= cost) {
+      userCoins -= cost;
+      updateUserUI();
+      alert("Achat effectué avec succès ! 🎉");
+    } else {
+      alert("Pièces insuffisantes ! ❌");
+    }
+  }
+
+  function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    if(input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const name = email.split('@')[0] || "Maeva";
+    const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+    
+    // Enregistrement dans localStorage
+    localStorage.setItem('smart_revision_user', JSON.stringify({ email: email, name: formattedName }));
+    
+    updateUserInterfaceData(formattedName);
+    showScreen('accueil');
+  }
+
+  function handleRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    
+    // Enregistrement dans localStorage
+    localStorage.setItem('smart_revision_user', JSON.stringify({ email: email, name: name }));
+
+    updateUserInterfaceData(name);
+    showScreen('accueil');
+  }
+
+  function toggleMatiere(type) {
+    document.getElementById('pillGeneral').classList.toggle('active-pill', type === 'general');
+    document.getElementById('pillPro').classList.toggle('active-pill', type === 'pro');
+    document.getElementById('matieresGeneral').style.display = type === 'general' ? 'block' : 'none';
+    document.getElementById('matieresPro').style.display = type === 'pro' ? 'block' : 'none';
+  }
+
+  function openSubjectMinifiches(subjectKey) {
+    currentSubject = subjectKey;
+    document.getElementById('listFichesSubjectTitle').textContent = "Matière : " + subjectKey.toUpperCase();
+    
+    let html = '';
+    for(let i=1; i<=10; i++) {
+      html += `
+        <div class="minifiche-item" onclick="openLecon(${i})">
+          <div>
+            <div class="fw-bold">Mini-fiche ${i}</div>
+            <div class="text-secondary small">Notions clés et essentiels de cours</div>
+          </div>
+          <div class="fs-5 text-secondary">›</div>
+        </div>`;
+    }
+    document.getElementById('minifichesContainer').innerHTML = html;
+    showScreen('liste-minifiches');
+  }
+
+  function backToListMinifiches() {
+    showScreen('liste-minifiches');
+  }
+
+  function openLecon(ficheNum) {
+    currentFicheIndex = ficheNum - 1;
+    let data = fichesData[currentSubject] && fichesData[currentSubject][currentFicheIndex] ? fichesData[currentSubject][currentFicheIndex] : {
+      title: "Mini-fiche " + ficheNum + " : Cours et Notions",
+      content: "Voici le résumé complet de la leçon. Maîtrisez les définitions fondamentales, les principes directeurs et les applications pratiques nécessaires pour réussir votre examen au Cameroun.",
+      quiz: [
+        { q: "Première question de test sur cette notion ?", options: ["Réponse A", "Réponse B (Correcte)", "Réponse C", "Réponse D"], correct: 1, explanation: "C'est la réponse B car elle correspond aux critères exigés par le programme." },
+        { q: "Seconde question de révision ?", options: ["Option 1", "Option 2", "Option 3 (Correcte)", "Option 4"], correct: 2, explanation: "L'option 3 est la seule exacte selon le cours officiel." },
+        { q: "Troisième question d'évaluation finale ?", options: ["Exact (Correct)", "Faux", "Neutre", "Autre"], correct: 0, explanation: "Il s'agit d'une affirmation rigoureusement exacte." }
+      ]
+    };
+
+    document.getElementById('leconTitle').textContent = data.title;
+    document.getElementById('leconSubtitle').textContent = "Matière : " + currentSubject.toUpperCase();
+    document.getElementById('leconContent').innerHTML = data.content;
+    showScreen('lecon');
+  }
+
+  function startFicheQuiz() {
+    currentQuestionIndex = 0;
+    quizScoreXP = 0;
+    loadQuizQuestion();
+    showScreen('quiz');
+  }
+
+  function loadQuizQuestion() {
+    let data = fichesData[currentSubject] && fichesData[currentSubject][currentFicheIndex] ? fichesData[currentSubject][currentFicheIndex] : fichesData['puericulture'][0];
+    currentQuizList = data.quiz;
+    
+    if(currentQuestionIndex >= currentQuizList.length) {
+      endQuiz(true);
+      return;
+    }
+
+    let qObj = currentQuizList[currentQuestionIndex];
+    document.getElementById('quizProgress').textContent = `Question ${currentQuestionIndex + 1}/${currentQuizList.length}`;
+    document.getElementById('quizQuestion').textContent = qObj.q;
+    document.getElementById('quizFeedback').textContent = '';
+    document.getElementById('quizExplanationBox').style.display = 'none';
+    document.getElementById('quizNextBtn').style.display = 'none';
+
+    let optHtml = '';
+    qObj.options.forEach((opt, idx) => {
+      let letter = String.fromCharCode(65 + idx);
+      optHtml += `
+        <div class="quiz-option" onclick="checkAnswer(${idx}, this)">
+          <div class="quiz-letter">${letter}</div>
+          <div class="flex-grow-1">${opt}</div>
+        </div>`;
+    });
+    document.getElementById('quizOptions').innerHTML = optHtml;
+  }
+
+  function checkAnswer(selectedIndex, el) {
+    let qObj = currentQuizList[currentQuestionIndex];
+    let options = document.querySelectorAll('.quiz-option');
+    
+    options.forEach(o => o.style.pointerEvents = 'none');
+
+    if(selectedIndex === qObj.correct) {
+      el.classList.add('correct');
+      document.getElementById('quizFeedback').innerHTML = "<span class='text-success'>✅ Bonne réponse ! (+10 XP)</span>";
+      quizScoreXP += 10;
+      document.getElementById('quizScore').textContent = quizScoreXP;
+    } else {
+      el.classList.add('wrong');
+      options[qObj.correct].classList.add('correct');
+      document.getElementById('quizFeedback').innerHTML = "<span class='text-danger'>❌ Mauvaise réponse.</span>";
+      userLives = Math.max(0, userLives - 1);
+      updateLivesDisplay();
+      
+      if(userLives <= 0) {
+        setTimeout(() => {
+          endQuiz(false);
+        }, 1500);
+        return;
+      }
+    }
+
+    document.getElementById('quizExplanationText').textContent = qObj.explanation;
+    document.getElementById('quizExplanationBox').style.display = 'block';
+    document.getElementById('quizNextBtn').style.display = 'block';
+  }
+
+  function nextQuestion() {
+    currentQuestionIndex++;
+    loadQuizQuestion();
+  }
+
+  function endQuiz(success) {
+    if(success) {
+      userCoins += 40;
+      userXp += 10;
+      if(userXp >= 100) {
+        userXp -= 100;
+        userLevel++;
+      }
+      updateUserUI();
+      alert("🎉 Félicitations ! Niveau terminé avec succès !\n🎁 Gains : +40 Pièces et +10 XP !");
+    } else {
+      alert("❌ Quiz échoué ! Vous n'avez gagné aucune pièce ni aucun XP. Retentez votre chance !");
+      userLives = 5;
+      updateLivesDisplay();
+    }
+    showScreen('accueil');
+  }
+
+  function updateUserUI() {
+    document.getElementById('userCoinsDisplay').textContent = userCoins;
+    document.getElementById('shopCoinsDisplay').textContent = userCoins;
+    document.getElementById('userLevelDisplay').textContent = userLevel;
+    document.getElementById('profileLevelDisplay').textContent = userLevel;
+    document.getElementById('userXpDisplay').textContent = userXp;
+    document.getElementById('profileXpDisplay').textContent = userXp;
+    let pct = userXp + '%';
+    document.getElementById('userXpBar').style.width = pct;
+    document.getElementById('profileXpBar').style.width = pct;
+  }
+
+  function updateLivesDisplay() {
+    document.getElementById('homeLivesDisplay').textContent = "❤️".repeat(userLives) + ` ${userLives}/5`;
+    const qLives = document.getElementById('quizLives');
+    if(qLives) qLives.textContent = "❤️❤️❤️❤️❤️".slice(0, userLives) + ` ${userLives}/5`;
+  }
+
+  function openProfileMenu() {
+    document.getElementById('profileOverlay').style.display = 'block';
+    document.getElementById('profileMenu').style.display = 'block';
+  }
+  function closeProfileMenu() {
+    document.getElementById('profileOverlay').style.display = 'none';
+    document.getElementById('profileMenu').style.display = 'none';
+  }
+  function viewProfilePhoto() {
+    closeProfileMenu();
+    document.getElementById('photoViewImg').src = document.getElementById('globalProfileImg').src;
+    document.getElementById('photoViewOverlay').style.display = 'flex';
+  }
+  function closePhotoView(e) {
+    document.getElementById('photoViewOverlay').style.display = 'none';
+  }
+  function triggerGalleryImport() {
+    closeProfileMenu();
+    document.getElementById('galleryInput').click();
+  }
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if(file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const url = evt.target.result;
+        // Sauvegarde permanente de la photo dans le localStorage
+        localStorage.setItem('smart_revision_photo', url);
+        applyProfilePhotoToAllImgs(url);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  function applyProfilePhotoToAllImgs(url) {
+    document.getElementById('globalProfileImg').src = url;
+    document.getElementById('homeProfileImg').src = url;
+    document.getElementById('profileScreenImg').src = url;
+    document.getElementById('rankingProfileImg').src = url;
+    document.getElementById('listProfileImg').src = url;
+  }
+
+  function openNotificationsModal() { new bootstrap.Modal(document.getElementById('notificationsModal')).show(); }
+  function openMenuModal() { new bootstrap.Modal(document.getElementById('menuModal')).show(); }
+  function menuNavigate(screenName) {
+    bootstrap.Modal.getInstance(document.getElementById('menuModal')).hide();
+    showScreen(screenName);
+  }
+  function speakLesson() { alert("Lecture audio de la mini-fiche en cours..."); }
+  function openFlashcards() { showScreen('flashcards'); }
+  function flipCard() { document.getElementById('flashcardObj').classList.toggle('flipped'); }
+  function nextFlashcard(val) { flipCard(); alert("Carte suivante chargée !"); }
+  function calculerMoyenne() {
+    let p = parseFloat(document.getElementById('notePuer').value) || 0;
+    let c = parseFloat(document.getElementById('noteCul').value) || 0;
+    let f = parseFloat(document.getElementById('noteFr').value) || 0;
+    let m = parseFloat(document.getElementById('noteMath').value) || 0;
+    let moy = ((p * 4) + (c * 4) + (f * 3) + (m * 2)) / 13;
+    document.getElementById('moyenneFinaleTxt').textContent = "Moyenne : " + moy.toFixed(2) + " / 20";
+    document.getElementById('mentionTxt').textContent = moy >= 10 ? "✅ Admis(e) avec succès !" : "❌ Insuffisant, continuez à réviser.";
+    document.getElementById('resultatSimContainer').style.display = 'block';
+  }
+  function setLanguage(lang) { alert("Langue modifiée."); }
+  function watchRewardedAd() {
+    userLives = Math.min(5, userLives + 1);
+    updateLivesDisplay();
+    alert("📺 Publicité visionnée ! +1 vie ajoutée.");
+  }
+  function copyReferralCode() { alert("Code copié !"); }
+  function openBadgesModal() { new bootstrap.Modal(document.getElementById('badgesModal')).show(); }
+  function openParentModal() { new bootstrap.Modal(document.getElementById('parentModal')).show(); }
+  function openFaqModal() { new bootstrap.Modal(document.getElementById('faqModal')).show(); }
+  function openPremiumModal() { new bootstrap.Modal(document.getElementById('premiumModal')).show(); }
+  function accessAnnales() { new bootstrap.Modal(document.getElementById('annalesLockedModal')).show(); }
+  function closeLockedAndOpenPremium() {
+    bootstrap.Modal.getInstance(document.getElementById('annalesLockedModal')).hide();
+    openPremiumModal();
+  }
+  function handlePremiumPayment(e) { e.preventDefault(); alert("Paiement validé avec succès ! Premium activé."); }
+  function sendSmartChatMessage() {
+    let inp = document.getElementById('chatInput');
+    if(!inp.value.trim()) return;
+    let txt = inp.value;
+    inp.value = '';
+    let win = document.getElementById('chatWindow');
+    win.innerHTML += `<div class="chat-bubble user">${txt}</div>`;
+    document.getElementById('chatTyping').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('chatTyping').style.display = 'none';
+      win.innerHTML += `<div class="chat-bubble bot">C'est une excellente question sur ton cours ! Voici l'explication détaillée pour ta révision... 📚</div>`;
+      let scrollArea = document.getElementById('chatScrollArea');
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }, 1000);
+  }
+  function closeMenuAndAccessAnnales() {
+    let modalEl = document.getElementById('menuModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if(modalInstance) modalInstance.hide();
+    accessAnnales();
+  }
+  function closeMenuAndOpenModal(modalId) {
+    let modalEl = document.getElementById('menuModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if(modalInstance) modalInstance.hide();
+    new bootstrap.Modal(document.getElementById(modalId)).show();
+  }
+  function menuLogout() {
+    let modalEl = document.getElementById('menuModal');
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if(modalInstance) modalInstance.hide();
+    logoutUser();
+  }
+  function handleLogout() {
+    logoutUser();
+  }
+  function logoutUser() {
+    localStorage.removeItem('smart_revision_user');
+    showScreen('auth-choix');
+  }
+</script>
+</body>
+</html>
